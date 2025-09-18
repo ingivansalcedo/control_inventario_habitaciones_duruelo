@@ -1,0 +1,40 @@
+service: inventory-control
+
+provider:
+  name: aws
+  runtime: python3.8
+  region: us-east-1
+  stage: dev
+  environment:
+    TABLE_NAME: ${self:service}-table
+
+plugins:
+  - serverless-python-requirements
+
+functions:
+  api:
+    handler: backend.handler.handler
+    events:
+      - httpApi: '*'
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+
+resources:
+  Resources:
+    InventoryTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.TABLE_NAME}
+        AttributeDefinitions:
+          - AttributeName: roomId
+            AttributeType: S
+          - AttributeName: eventTs
+            AttributeType: N
+        KeySchema:
+          - AttributeName: roomId
+            KeyType: HASH
+          - AttributeName: eventTs
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
